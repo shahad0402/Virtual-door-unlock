@@ -1,0 +1,42 @@
+import cv2
+import os
+import numpy as np
+
+# Path to the directory containing the training images
+training_dir = '/home/varnana/Visual_studio/virtual_door_unlock/my_images'
+
+# Initialize lists to store training data
+faces = []
+labels = []
+
+# Load the pre-trained face detection model
+face_cascade = cv2.CascadeClassifier('/home/varnana/Visual_studio/data/haarcascade_frontalface_default.xml')
+
+# Iterate over the images in the training directory
+for image_file in os.listdir(training_dir):
+    image_path = os.path.join(training_dir, image_file)
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Perform face detection
+    faces_detected = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    # Iterate over the detected faces
+    for (x, y, w, h) in faces_detected:
+        face = gray[y:y+h, x:x+w]
+        resized_face = cv2.resize(face, (100, 100))  # Resize the face to a desired size
+
+        faces.append(resized_face)
+        labels.append(1)  # Assign a label to the face
+
+# Create the LBPH face recognizer
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+
+# Train the recognizer with the training data
+recognizer.train(faces, np.array(labels))
+
+# Save the trained model to a file
+model_path = '/home/varnana/Visual_studio/virtual_door_unlock/my_images/my_image.xml'
+recognizer.write(model_path)
+
+print('Training complete. Model saved to:', model_path)
